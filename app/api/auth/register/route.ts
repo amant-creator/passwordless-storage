@@ -18,7 +18,7 @@ const origin = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 // Generate registration options
 export async function POST(request: Request) {
     try {
-        const { username } = await request.json()
+        const { username, email } = await request.json()
 
         if (!username || typeof username !== 'string') {
             return NextResponse.json(
@@ -30,14 +30,8 @@ export async function POST(request: Request) {
         // Check if user already exists
         const existingUser = await prisma.user.findUnique({
             where: { username },
+            include: { credentials: true },
         })
-
-        if (existingUser) {
-            return NextResponse.json(
-                { error: 'Username already exists' },
-                { status: 400 }
-            )
-        }
 
         // Generate registration options
         const opts: GenerateRegistrationOptionsOpts = {
@@ -46,25 +40,43 @@ export async function POST(request: Request) {
             userName: username,
             timeout: 60000,
             attestationType: 'none',
+            // Exclude already registered credentials to avoid duplicates
+            excludeCredentials: existingUser?.credentials.map((cred) => ({
+                id: Buffer.from(cred.credentialID).toString('base64url'),
+            })) ?? [],
             authenticatorSelection: {
                 residentKey: 'preferred',
                 userVerification: 'preferred',
-                authenticatorAttachment: 'platform',
+                // No authenticatorAttachment restriction — allows both phone and platform (Windows Hello)
             },
         }
 
         const options = await generateRegistrationOptions(opts)
 
-        // Create user with challenge
-        await prisma.user.create({
-            data: {
-                username,
-                currentChallenge: options.challenge,
-            },
-        })
+        if (existingUser) {
+            // Existing user — just update the challenge to add a new credential
+            await prisma.user.update({
+                where: { id: existingUser.id },
+                data: { currentChallenge: options.challenge },
+            })
+        } else {
+            // New user — create the account, save email if provided
+            await prisma.user.create({
+                data: {
+                    username,
+                    currentChallenge: options.challenge,
+                    ...(email && typeof email === 'string' && email.includes('@')
+                        ? { email: email.toLowerCase().trim() }
+                        : {}),
+                },
+            })
+        }
 
         return NextResponse.json(options)
-    } catch (error) {
+    } catch (error: any) {
+        if (error?.code === 'P2002') {
+            return NextResponse.json({ error: 'Email already in use by another account' }, { status: 400 })
+        }
         console.error('Registration options error:', error)
         return NextResponse.json(
             { error: 'Failed to generate registration options' },
@@ -92,6 +104,7 @@ export async function PUT(request: Request) {
         // Get user
         const user = await prisma.user.findUnique({
             where: { username },
+            include: { credentials: true },
         })
 
         if (!user || !user.currentChallenge) {

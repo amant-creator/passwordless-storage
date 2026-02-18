@@ -23,7 +23,7 @@ export const ourFileRouter = {
                     userId: metadata.userId,
                     fileKey: file.key,
                     fileName: file.name,
-                    fileUrl: file.url,
+                    fileUrl: file.appUrl,
                     fileSize: file.size,
                 },
             })

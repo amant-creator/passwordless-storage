@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "set NEXT_DISABLE_TURBOPACK=1 && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -12,10 +12,12 @@
     "@prisma/client": "^6.19.2",
     "@simplewebauthn/browser": "^13.2.2",
     "@simplewebauthn/server": "^13.2.2",
+    "@types/nodemailer": "^7.0.10",
     "@uploadthing/react": "^7.3.3",
     "clsx": "^2.1.1",
     "lucide-react": "^0.574.0",
     "next": "16.1.6",
+    "nodemailer": "^8.0.1",
     "prisma": "^6.19.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",

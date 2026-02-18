@@ -16,6 +16,8 @@ model User {
   email            String?      @unique
   username         String       @unique
   currentChallenge String?
+  otpCode          String?
+  otpExpiry        DateTime?
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   

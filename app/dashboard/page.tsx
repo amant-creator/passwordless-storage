@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { UploadDropzone } from '@/lib/uploadthing'
-import { LogOut, Trash2, FileIcon, Download, Upload as UploadIcon } from 'lucide-react'
+import { startRegistration } from '@simplewebauthn/browser'
+import { LogOut, Trash2, FileIcon, Download, Upload as UploadIcon, MonitorSmartphone, Mail } from 'lucide-react'
 
 interface FileItem {
     id: string
@@ -25,6 +26,9 @@ export default function DashboardPage() {
     const [files, setFiles] = useState<FileItem[]>([])
     const [loading, setLoading] = useState(true)
     const [uploadMode, setUploadMode] = useState(false)
+    const [emailInput, setEmailInput] = useState('')
+    const [emailSaving, setEmailSaving] = useState(false)
+    const [emailMsg, setEmailMsg] = useState('')
 
     useEffect(() => {
         checkAuth()
@@ -56,6 +60,63 @@ export default function DashboardPage() {
             }
         } catch (error) {
             console.error('Failed to load files:', error)
+        }
+    }
+
+    const handleSaveEmail = async () => {
+        if (!emailInput.trim()) return
+        setEmailSaving(true)
+        setEmailMsg('')
+        try {
+            const res = await fetch('/api/auth/update-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: emailInput }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error)
+            setUser((prev) => prev ? { ...prev, email: emailInput } : prev)
+            setEmailMsg('Email saved! You can now use Email OTP as a login fallback.')
+            setEmailInput('')
+        } catch (err: any) {
+            setEmailMsg(err.message || 'Failed to save email')
+        } finally {
+            setEmailSaving(false)
+        }
+    }
+
+    const handleAddDevice = async () => {
+        if (!user) return
+        try {
+            const optionsRes = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user.username }),
+            })
+            if (!optionsRes.ok) {
+                const data = await optionsRes.json()
+                alert(data.error || 'Failed to start registration')
+                return
+            }
+            const options = await optionsRes.json()
+            const attResp = await startRegistration({ optionsJSON: options })
+            const verifyRes = await fetch('/api/auth/register', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user.username, response: attResp }),
+            })
+            if (!verifyRes.ok) {
+                const data = await verifyRes.json()
+                alert(data.error || 'Failed to add device')
+                return
+            }
+            alert('New device/biometric added successfully!')
+        } catch (err: any) {
+            if (err.name === 'NotAllowedError') {
+                alert('Operation was cancelled')
+            } else {
+                alert(err.message || 'Failed to add device')
+            }
         }
     }
 
@@ -113,23 +174,69 @@ export default function DashboardPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div>
-                            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                            <h1 className="text-2xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                                 My Files
                             </h1>
                             <p className="text-sm text-muted">Welcome, {user?.username}</p>
                         </div>
-                        <button
-                            onClick={handleLogout}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface hover:bg-surface-elevated transition-all border border-border"
-                        >
-                            <LogOut className="w-4 h-4" />
-                            Logout
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleAddDevice}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface hover:bg-surface-elevated transition-all border border-border text-blue-400"
+                                title="Add this device/biometric for future logins"
+                            >
+                                <MonitorSmartphone className="w-4 h-4" />
+                                Add Device
+                            </button>
+                            <button
+                                onClick={handleLogout}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface hover:bg-surface-elevated transition-all border border-border"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                Logout
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Email OTP Fallback Banner */}
+                {!user?.email && (
+                    <div className="mb-6 glass rounded-xl p-4 border border-yellow-500/30 bg-yellow-500/5">
+                        <div className="flex items-start gap-3">
+                            <Mail className="w-5 h-5 text-yellow-400 mt-0.5 shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-sm font-medium text-yellow-400">Add email for fallback login</p>
+                                <p className="text-xs text-muted mt-1 mb-3">
+                                    No Bluetooth or biometrics available? Register your email to use OTP login as a backup.
+                                </p>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="email"
+                                        value={emailInput}
+                                        onChange={(e) => setEmailInput(e.target.value)}
+                                        placeholder="your@email.com"
+                                        className="flex-1 px-3 py-2 text-sm bg-surface rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all"
+                                        onKeyPress={(e) => { if (e.key === 'Enter') handleSaveEmail() }}
+                                    />
+                                    <button
+                                        onClick={handleSaveEmail}
+                                        disabled={emailSaving || !emailInput.trim()}
+                                        className="px-4 py-2 text-sm bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg disabled:opacity-50 transition-all"
+                                    >
+                                        {emailSaving ? 'Saving...' : 'Save'}
+                                    </button>
+                                </div>
+                                {emailMsg && <p className="text-xs mt-2 text-green-400">{emailMsg}</p>}
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {user?.email && emailMsg && (
+                    <div className="mb-6 p-3 glass rounded-xl border border-green-500/30 text-green-400 text-sm">{emailMsg}</div>
+                )}
+
                 {/* Upload Section */}
                 <div className="mb-8">
                     {!uploadMode ? (
@@ -138,7 +245,7 @@ export default function DashboardPage() {
                             className="w-full glass rounded-2xl p-12 border-2 border-dashed border-border hover:border-blue-500 transition-all group"
                         >
                             <div className="flex flex-col items-center gap-3">
-                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <div className="w-16 h-16 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <UploadIcon className="w-8 h-8 text-white" />
                                 </div>
                                 <div>
@@ -189,7 +296,7 @@ export default function DashboardPage() {
                             >
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                                        <div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center shrink-0">
                                             <FileIcon className="w-5 h-5 text-white" />
                                         </div>
                                         <div className="min-w-0">
