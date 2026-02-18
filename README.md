@@ -1,139 +1,82 @@
-# Passwordless Biometric File Storage - Setup Instructions
+# 🔐 Biometric Passwordless File Storage
 
-## Prerequisites
+A premium, state-of-the-art file storage application that replaces traditional passwords with biometric authentication (WebAuthn). Built with **Next.js 16**, **Prisma**, **Supabase**, and **UploadThing**.
 
-Before you begin, you need to set up:
+## ✨ Features
 
-1. **Supabase Database**
-   - Go to [supabase.com](https://supabase.com) and create a new project
-   - Get your database connection string from Project Settings → Database
-   - It should look like: `postgresql://[user]:[password]@[host]:5432/[dbname]`
+- **🚀 Passwordless Auth**: Register and login using Face ID, Touch ID, Windows Hello, or Android Biometrics.
+- **📁 Secure Storage**: Upload, list, download, and delete files with ease.
+- **💎 Premium UI**: Modern glassmorphism design with smooth animations and responsive layouts.
+- **🛡️ Secure Sessions**: HTTP-only, secure cookie-based session management.
+- **⚡ High Performance**: Built with the Next.js App Router for speed and SEO.
 
-2. **UploadThing Account**
-   - Go to [uploadthing.com](https://uploadthing.com) and create an account
-   - Create a new app
-   - Get your API token from the dashboard
+## 🛠️ Tech Stack
 
-## Setup Steps
+- **Framework**: Next.js 16 (App Router)
+- **Database**: Supabase (PostgreSQL)
+- **ORM**: Prisma
+- **Storage**: UploadThing
+- **Auth**: WebAuthn (@simplewebauthn)
+- **Styling**: TailwindCSS v4 + Lucide Icons
 
-### 1. Configure Environment Variables
+## 🚀 Getting Started
 
-Edit the `.env.local` file and add your credentials:
+### 1. Prerequisites
 
-```env
-# Database - Get from Supabase
-DATABASE_URL="postgresql://user:password@host:5432/dbname"
+Before cloning, ensure you have:
+- [Node.js 18+](https://nodejs.org/)
+- A [Supabase](https://supabase.com/) account (for the database)
+- An [UploadThing](https://uploadthing.com/) account (for file storage)
 
-# UploadThing - Get from UploadThing dashboard
-UPLOADTHING_TOKEN="your-uploadthing-token"
+### 2. Clone the Repository
 
-# App Configuration
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-RP_NAME="Biometric File Storage"
-RP_ID="localhost"
-
-# Session (generate a random 32+ character string)
-SESSION_SECRET="change-this-to-a-random-32-character-string"
+```bash
+git clone https://github.com/your-username/wordless.git
+cd wordless
 ```
 
-### 2. Initialize Database
+### 3. Install Dependencies
 
-Run Prisma migration to create database tables:
+```bash
+npm install
+```
+
+### 4. Environment Setup
+
+Copy the example environment file and fill in your credentials:
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` with your own keys:
+- **DATABASE_URL**: Your Supabase connection string (Pooler).
+- **DIRECT_URL**: Your Supabase direct connection string (for migrations).
+- **UPLOADTHING_TOKEN**: Your UploadThing API token.
+- **SESSION_SECRET**: A random string (at least 32 characters).
+
+### 5. Initialize Database
+
+Run the following commands to set up your database schema:
 
 ```bash
 npx prisma db push
-```
-
-Generate Prisma client:
-
-```bash
 npx prisma generate
 ```
 
-### 3. Run Development Server
+### 6. Run the App
 
 ```bash
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to see your app!
+Visit [http://localhost:3000](http://localhost:3000) to start using the app!
 
-## Testing Biometric Authentication
+## 🧪 Testing Biometrics
 
-### Requirements
-- A device with biometric capabilities:
-  - **Mac**: Touch ID or Face ID
-  - **Windows**: Windows Hello
-  - **Android/iOS**: Fingerprint or Face unlock
-  - **Alternative**: Hardware security key (YubiKey, etc.)
+- **Localhost**: You can test WebAuthn on `localhost` without HTTPS.
+- **Production**: When deploying to Vercel or other platforms, you **must** use HTTPS and update the `RP_ID` and `NEXT_PUBLIC_APP_URL` in your environment variables.
 
-### Testing Steps
+## 📄 License
 
-1. **Register a new user:**
-   - Open the app in your browser
-   - Click "Register" tab
-   - Enter a username
-   - Click "Register with Biometrics"
-   - Your device will prompt for biometric authentication
-   - Complete the biometric check
-
-2. **Test login:**
-   - Open the app in an incognito/private window
-   - Click "Login" tab
-   - Enter the same username
-   - Click "Login with Biometrics"
-   - Authenticate with your biometric sensor
-
-3. **Test file operations:**
-   - Upload files using the upload button
-   - View your files in the dashboard
-   - Download files
-   - Delete files
-
-## Troubleshooting
-
-### "WebAuthn not supported"
-- Use HTTPS in production (required for WebAuthn)
-- For local development, use `localhost` (HTTP is allowed)
-- Some browsers don't support WebAuthn in private/incognito mode
-
-### Database connection errors
-- Verify your DATABASE_URL is correct
-- Check if Supabase project is active
-- Ensure `prisma db push` ran successfully
-
-### UploadThing errors
-- Verify your UPLOADTHING_TOKEN is correct
-- Check file size limits (configured in `core.ts`)
-- Ensure you're logged in when uploading
-
-## Deployment
-
-### Vercel Deployment
-
-1. Push your code to GitHub
-2. Import project in Vercel
-3. Add all environment variables
-4. Update `RP_ID` to your domain (e.g., `your-app.vercel.app`)
-5. Update `NEXT_PUBLIC_APP_URL` to your full URL
-6. Deploy!
-
-**Important:** For production, you MUST use HTTPS (Vercel provides this automatically).
-
-## Architecture
-
-- **Authentication**: WebAuthn (no passwords!)
-- **Database**: PostgreSQL via Supabase
-- **ORM**: Prisma
-- **File Storage**: UploadThing
-- **Framework**: Next.js 16 with App Router
-- **Styling**: TailwindCSS v4 with custom theme
-- **Deploying**: Vercel
-
-## Security Notes
-
-- Biometric data never leaves your device
-- Only public key credentials are stored in the database
-- Session cookies are HTTP-only and secure
-- All API routes check authentication
-- Files are scoped to authenticated users
+This project is licensed under the MIT License.
