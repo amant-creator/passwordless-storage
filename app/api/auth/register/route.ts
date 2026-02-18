@@ -79,7 +79,7 @@ export async function POST(request: Request) {
         }
         console.error('Registration options error:', error)
         return NextResponse.json(
-            { error: 'Failed to generate registration options' },
+            { error: error?.message || 'Failed to generate registration options' },
             { status: 500 }
         )
     }
@@ -115,6 +115,7 @@ export async function PUT(request: Request) {
         }
 
         // Verify the registration response
+        console.log('WebAuthn verify config:', { expectedOrigin: origin, expectedRPID: rpID })
         const opts: VerifyRegistrationResponseOpts = {
             response,
             expectedChallenge: user.currentChallenge,
@@ -154,10 +155,10 @@ export async function PUT(request: Request) {
         await createSession(user.id)
 
         return NextResponse.json({ verified: true })
-    } catch (error) {
+    } catch (error: any) {
         console.error('Registration verification error:', error)
         return NextResponse.json(
-            { error: 'Failed to verify registration' },
+            { error: error?.message || 'Failed to verify registration' },
             { status: 500 }
         )
     }
