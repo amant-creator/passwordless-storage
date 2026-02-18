@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id               String       @id @default(cuid())
+  email            String?      @unique
+  username         String       @unique
+  currentChallenge String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  
+  credentials      Credential[]
+  files            File[]
+}
+
+model Credential {
+  id            String   @id @default(cuid())
+  userId        String
+  credentialID  Bytes    @unique
+  publicKey     Bytes
+  counter       BigInt
+  transports    String?
+  createdAt     DateTime @default(now())
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model File {
+  id        String   @id @default(cuid())
+  userId    String
+  fileKey   String   @unique
+  fileName  String
+  fileUrl   String
+  fileSize  Int?
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}

@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* Tailwind CSS v4 Configuration */
+
+@theme {
+  --color-primary: hsl(220 90% 56%);
+  --color-primary-hover: hsl(220 90% 48%);
+  --color-secondary: hsl(280 80% 60%);
+  --color-accent: hsl(160 60% 50%);
+  --color-background: hsl(240 10% 4%);
+  --color-surface: hsl(240 8% 8%);
+  --color-surface-elevated: hsl(240 8% 12%);
+  --color-border: hsl(240 6% 20%);
+  --color-text: hsl(0 0% 98%);
+  --color-text-muted: hsl(0 0% 70%);
+  --color-success: hsl(142 76% 36%);
+  --color-error: hsl(0 84% 60%);
+
+  --radius-lg: 0.75rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-text antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+@layer utilities {
+  .animate-gradient {
+    animation: gradient 8s ease infinite;
+  }
+
+  @keyframes gradient {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.8;
+    }
+  }
+}
