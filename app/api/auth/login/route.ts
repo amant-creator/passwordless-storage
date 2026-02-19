@@ -13,7 +13,7 @@ import type {
 import type { AuthenticationResponseJSON } from '@simplewebauthn/server'
 
 const rpID = process.env.RP_ID || 'localhost'
-const origin = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+const origin = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '')
 
 // Generate authentication options
 export async function POST(request: Request) {

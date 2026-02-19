@@ -12,7 +12,7 @@ const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000 // 30 days
 
 export const RP_ID = process.env.RP_ID || 'localhost';
 export const RP_NAME = process.env.RP_NAME || 'Biometric File Storage';
-export const EXPECTED_ORIGIN = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+export const EXPECTED_ORIGIN = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
 
 export async function createSession(userId: string) {
     const cookieStore = await cookies()
