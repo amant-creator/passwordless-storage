@@ -18,6 +18,7 @@ model User {
   currentChallenge String?
   otpCode          String?
   otpExpiry        DateTime?
+  emailPreferences Json         @default("{\"welcomeEmail\": true, \"notifications\": true}")
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   

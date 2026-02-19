@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { sanitizeInput, isValidUsername, isSuspiciousInput } from '@/lib/security'
 import nodemailer from 'nodemailer'
-import type { Prisma } from '@prisma/client'
 
 function getTransporter() {
     const user = process.env.EMAIL_USER
@@ -27,7 +27,20 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Username is required' }, { status: 400 })
         }
 
-        const user = await prisma.user.findUnique({ where: { username } })
+        // Sanitize and validate username
+        const sanitizedUsername = sanitizeInput(username, 50)
+
+        if (!isValidUsername(sanitizedUsername)) {
+            return NextResponse.json({ error: 'Invalid username format' }, { status: 400 })
+        }
+
+        // Check for suspicious input
+        if (isSuspiciousInput(sanitizedUsername)) {
+            console.warn(`Suspicious OTP request for username: ${sanitizedUsername}`)
+            return NextResponse.json({ error: 'Invalid username format' }, { status: 400 })
+        }
+
+        const user = await prisma.user.findUnique({ where: { username: sanitizedUsername } })
 
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -45,7 +58,7 @@ export async function POST(request: Request) {
 
         await prisma.user.update({
             where: { id: user.id },
-            data: { otpCode: otp, otpExpiry: expiry } as Prisma.UserUpdateInput,
+            data: { otpCode: otp, otpExpiry: expiry },
         })
 
         const transporter = getTransporter()

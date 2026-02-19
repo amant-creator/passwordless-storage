@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createSession } from '@/lib/auth'
+import { sanitizeInput, isValidUsername, isSuspiciousInput } from '@/lib/security'
 import {
     generateAuthenticationOptions,
     verifyAuthenticationResponse,
@@ -27,9 +28,28 @@ export async function POST(request: Request) {
             )
         }
 
+        // Sanitize and validate username
+        const sanitizedUsername = sanitizeInput(username, 50)
+
+        if (!isValidUsername(sanitizedUsername)) {
+            return NextResponse.json(
+                { error: 'Invalid username format' },
+                { status: 400 }
+            )
+        }
+
+        // Check for suspicious input
+        if (isSuspiciousInput(sanitizedUsername)) {
+            console.warn(`Suspicious login attempt with username: ${sanitizedUsername}`)
+            return NextResponse.json(
+                { error: 'Invalid username format' },
+                { status: 400 }
+            )
+        }
+
         // Get user and credentials
         const user = await prisma.user.findUnique({
-            where: { username },
+            where: { username: sanitizedUsername },
             include: { credentials: true },
         })
 

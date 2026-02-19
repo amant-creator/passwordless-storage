@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createSession } from '@/lib/auth'
+import { sendEmail, generateWelcomeEmail, checkEmailPreference } from '@/lib/email'
+import { sanitizeInput, isValidUsername, isValidEmail, isSuspiciousInput } from '@/lib/security'
 import {
     generateRegistrationOptions,
     verifyRegistrationResponse,
@@ -20,6 +22,7 @@ export async function POST(request: Request) {
     try {
         const { username, email } = await request.json()
 
+        // Validate username
         if (!username || typeof username !== 'string') {
             return NextResponse.json(
                 { error: 'Username is required' },
@@ -27,9 +30,56 @@ export async function POST(request: Request) {
             )
         }
 
+        // Sanitize username
+        const sanitizedUsername = sanitizeInput(username, 50)
+
+        // Validate username format
+        if (!isValidUsername(sanitizedUsername)) {
+            return NextResponse.json(
+                { error: 'Username must be 3-32 characters (alphanumeric, underscore, hyphen only)' },
+                { status: 400 }
+            )
+        }
+
+        // Check for suspicious input (SQL injection, XSS attempts)
+        if (isSuspiciousInput(sanitizedUsername)) {
+            console.warn(`Suspicious username input attempt: ${sanitizedUsername}`)
+            return NextResponse.json(
+                { error: 'Invalid username format' },
+                { status: 400 }
+            )
+        }
+
+        // Validate email if provided
+        if (email) {
+            if (typeof email !== 'string') {
+                return NextResponse.json(
+                    { error: 'Invalid email format' },
+                    { status: 400 }
+                )
+            }
+
+            const sanitizedEmail = sanitizeInput(email.toLowerCase().trim(), 254)
+
+            if (!isValidEmail(sanitizedEmail)) {
+                return NextResponse.json(
+                    { error: 'Invalid email format' },
+                    { status: 400 }
+                )
+            }
+
+            if (isSuspiciousInput(sanitizedEmail)) {
+                console.warn(`Suspicious email input attempt: ${sanitizedEmail}`)
+                return NextResponse.json(
+                    { error: 'Invalid email format' },
+                    { status: 400 }
+                )
+            }
+        }
+
         // Check if user already exists
         const existingUser = await prisma.user.findUnique({
-            where: { username },
+            where: { username: sanitizedUsername },
             include: { credentials: true },
         })
 
@@ -37,11 +87,11 @@ export async function POST(request: Request) {
         const opts: GenerateRegistrationOptionsOpts = {
             rpName,
             rpID,
-            userName: username,
+            userName: sanitizedUsername,
             timeout: 60000,
             attestationType: 'none',
             // Exclude already registered credentials to avoid duplicates
-            excludeCredentials: existingUser?.credentials.map((cred) => ({
+            excludeCredentials: existingUser?.credentials.map((cred: typeof existingUser.credentials[number]) => ({
                 id: Buffer.from(cred.credentialID).toString('base64url'),
             })) ?? [],
             authenticatorSelection: {
@@ -61,12 +111,13 @@ export async function POST(request: Request) {
             })
         } else {
             // New user — create the account, save email if provided
+            const sanitizedEmail = email ? sanitizeInput(email.toLowerCase().trim(), 254) : null
             await prisma.user.create({
                 data: {
-                    username,
+                    username: sanitizedUsername,
                     currentChallenge: options.challenge,
-                    ...(email && typeof email === 'string' && email.includes('@')
-                        ? { email: email.toLowerCase().trim() }
+                    ...(sanitizedEmail && isValidEmail(sanitizedEmail)
+                        ? { email: sanitizedEmail }
                         : {}),
                 },
             })
@@ -153,6 +204,27 @@ export async function PUT(request: Request) {
 
         // Create session
         await createSession(user.id)
+
+        // Send welcome email if user has an email and has opted in
+        if (user.email) {
+            try {
+                const canSendWelcomeEmail = await checkEmailPreference(user.id, 'welcomeEmail')
+                if (canSendWelcomeEmail) {
+                    const welcomeHtml = generateWelcomeEmail(user.username)
+                    await sendEmail({
+                        to: user.email,
+                        subject: `Welcome ${user.username}! 🎉 Your Biometric File Storage Account is Ready`,
+                        html: welcomeHtml,
+                    })
+                    console.log(`Welcome email sent to ${user.email}`)
+                } else {
+                    console.log(`Welcome email skipped for ${user.email} (user opted out)`)
+                }
+            } catch (emailError: any) {
+                console.error('Failed to send welcome email:', emailError?.message)
+                // Don't fail the registration if email sending fails
+            }
+        }
 
         return NextResponse.json({ verified: true })
     } catch (error: any) {
