@@ -56,6 +56,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
       </head>
       <body className="antialiased">
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         <PWAInstall />
         <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
         {children}

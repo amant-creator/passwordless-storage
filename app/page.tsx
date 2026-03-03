@@ -169,7 +169,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <main id="main-content" className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated background gradient */}
       <div className="absolute inset-0 bg-linear-to-br from-blue-600/10 via-purple-600/10 to-teal-600/10 animate-gradient" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_50%)]" />
@@ -255,7 +255,7 @@ export default function HomePage() {
                         placeholder="Enter your username"
                         className="w-full px-4 py-3 bg-surface rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                         disabled={loading}
-                        onKeyPress={(e) => { if (e.key === 'Enter') handleSendOTP() }}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleSendOTP() }}
                       />
                     </div>
                     {error && (
@@ -268,7 +268,7 @@ export default function HomePage() {
                     >
                       {loading ? (
                         <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
@@ -298,7 +298,7 @@ export default function HomePage() {
                         placeholder="000000"
                         className="w-full px-4 py-3 bg-surface rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-center text-2xl tracking-widest"
                         disabled={loading}
-                        onKeyPress={(e) => { if (e.key === 'Enter') handleVerifyOTP() }}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleVerifyOTP() }}
                       />
                     </div>
                     {error && (
@@ -335,7 +335,7 @@ export default function HomePage() {
                     placeholder="Enter your username"
                     className="w-full px-4 py-3 bg-surface rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     disabled={loading}
-                    onKeyPress={(e) => {
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         if (mode === 'login') handleLogin()
                         else handleRegister()
@@ -376,7 +376,7 @@ export default function HomePage() {
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
@@ -399,7 +399,7 @@ export default function HomePage() {
             )}
           </div>
         </div>
-      </div>
+      </main>
 
       <style jsx>{`
         @keyframes gradient {

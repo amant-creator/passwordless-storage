@@ -270,7 +270,7 @@ export default function DashboardPage() {
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-4 md:pt-8">
+            <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-4 md:pt-8">
                 {/* Email OTP Fallback Banner */}
                 {!user?.email && (
                     <div className="mb-6 glass rounded-xl p-4 border border-yellow-500/30 bg-yellow-500/5">
@@ -288,7 +288,7 @@ export default function DashboardPage() {
                                         onChange={(e) => setEmailInput(e.target.value)}
                                         placeholder="your@email.com"
                                         className="flex-1 px-3 py-2 text-sm bg-surface rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all min-h-11"
-                                        onKeyPress={(e) => { if (e.key === 'Enter') handleSaveEmail() }}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEmail() }}
                                         aria-label="Email address"
                                     />
                                     <button
