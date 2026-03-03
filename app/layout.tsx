@@ -4,6 +4,7 @@ import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin"
 import { extractRouterConfig } from "uploadthing/server"
 import { ourFileRouter } from "@/app/api/uploadthing/core"
 import PWAInstall from "@/components/PWAInstall"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
   title: "Biometric File Storage - Passwordless & Secure",
@@ -58,6 +59,7 @@ export default function RootLayout({
         <PWAInstall />
         <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
         {children}
+        <SpeedInsights />
       </body>
     </html>
   )
