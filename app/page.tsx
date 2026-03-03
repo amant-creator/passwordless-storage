@@ -1,30 +1,16 @@
-// Corrected app/page.tsx file
+import { useEffect } from 'react';
+import type { NextPage } from 'next';
 
-import React from 'react';
+const Page: NextPage = () => {
+    useEffect(() => {
+        // Your side effects here
+    }, []);
 
-const Page = () => {
     return (
-        <div>
-            {/* Other component code */}
-            <div className="bg-gradient-to-r from-teal-500 to-blue-500">
-                {/* Content for the div */}
-            </div>
-            {/* Additional components */}
-            <div className="bg-gradient-to-b from-green-400 to-blue-500">
-                {/* Content for the div */}
-            </div>
-            {/* More components */}
-            <div className="bg-gradient-to-t from-pink-500 to-yellow-500">
-                {/* Content for the div */}
-            </div>
-            {/* Other components */}
-            <div className="bg-gradient-to-b from-red-500 to-purple-500">
-                {/* Content for the div */}
-            </div>
-            {/* More components */}
-            <div className="bg-gradient-to-l from-indigo-500 to-pink-500">
-                {/* Content for the div */}
-            </div>
+        <div className="bg-gradient-to-r from-blue-500 to-purple-500">
+            <h1 className="text-white">Welcome to Passwordless Storage</h1>
+            <p className="bg-gradient-to-r from-red-500 to-yellow-500 text-black p-4">Secure and Simple</p>
+            {/* More content */}
         </div>
     );
 };
